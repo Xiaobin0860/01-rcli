@@ -1,3 +1,14 @@
-fn main() {
-    println!("Hello, world!");
+use rcli::{process_csv, Opts, SubCommand};
+
+fn main() -> anyhow::Result<()> {
+    let opts = Opts::parse_args();
+    println!("{:?}", opts);
+
+    match opts.cmd {
+        SubCommand::Csv(csv_opts) => {
+            process_csv(&csv_opts.input, &csv_opts.output)?;
+        }
+    }
+
+    Ok(())
 }
