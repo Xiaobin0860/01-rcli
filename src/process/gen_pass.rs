@@ -1,4 +1,5 @@
 use rand::{rngs::ThreadRng, seq::SliceRandom};
+use zxcvbn::zxcvbn;
 
 const LOWER: &[u8] = b"abdefghjmnqrt";
 const UPPER: &[u8] = b"ABDEFGHJMNQRT";
@@ -37,6 +38,8 @@ pub fn gen_pass(
     pass.shuffle(&mut rng);
     let pass = String::from_utf8(pass)?;
     println!("{pass}");
+    let estimate = zxcvbn(&pass, &[])?;
+    eprintln!("pass strength: {}", estimate.score());
     Ok(())
 }
 
