@@ -3,25 +3,6 @@ use std::{fmt::Display, path::Path};
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-pub struct Opts {
-    #[command(subcommand)]
-    pub cmd: SubCommand,
-}
-
-impl Opts {
-    pub fn parse_args() -> Self {
-        Self::parse()
-    }
-}
-
-#[derive(Parser, Debug)]
-pub enum SubCommand {
-    #[command(about = "Show CSV, or convert CSV to other formats.")]
-    Csv(CsvOpts),
-}
-
-#[derive(Parser, Debug)]
 pub struct CsvOpts {
     #[arg(short, long, value_parser = verify_input_file)]
     pub input: String,

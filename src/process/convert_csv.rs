@@ -10,13 +10,13 @@ pub fn process_csv(input: &str, output: &str, format: OutputFormat) -> anyhow::R
     let mut players = Vec::new();
     for player in rdr.deserialize() {
         let player: Player = player?;
-        println!("{player:?}");
         players.push(player);
     }
     let content = match format {
         OutputFormat::Json => serde_json::to_string_pretty(&players)?,
         OutputFormat::Yaml => serde_yaml::to_string(&players)?,
     };
+    println!("{content}");
     fs::write(output, content)?;
     Ok(())
 }
