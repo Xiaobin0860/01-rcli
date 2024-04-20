@@ -1,4 +1,4 @@
-use rcli::{gen_pass, process_csv, Opts, SubCommand};
+use rcli::{convert_csv, gen_pass, Opts, SubCommand};
 
 fn main() -> anyhow::Result<()> {
     let opts = Opts::parse_args();
@@ -11,7 +11,7 @@ fn main() -> anyhow::Result<()> {
             } else {
                 format!("output.{}", opts.format)
             };
-            process_csv(&opts.input, &output, opts.format)?;
+            convert_csv(&opts.input, &output, opts.format)?;
         }
         SubCommand::Pass(opts) => gen_pass(
             opts.length,

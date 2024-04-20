@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::OutputFormat;
 
-pub fn process_csv(input: &str, output: &str, format: OutputFormat) -> anyhow::Result<()> {
+pub fn convert_csv(input: &str, output: &str, format: OutputFormat) -> anyhow::Result<()> {
     let mut rdr = CsvReader::from_path(input)?;
     let mut players = Vec::new();
     for player in rdr.deserialize() {
