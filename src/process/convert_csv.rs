@@ -3,7 +3,9 @@ use std::fs;
 use csv::Reader as CsvReader;
 use serde::{Deserialize, Serialize};
 
-pub fn process_csv(input: &str, output: &str) -> anyhow::Result<()> {
+use crate::OutputFormat;
+
+pub fn process_csv(input: &str, output: &str, format: OutputFormat) -> anyhow::Result<()> {
     let mut rdr = CsvReader::from_path(input)?;
     let mut players = Vec::new();
     for player in rdr.deserialize() {
@@ -11,8 +13,11 @@ pub fn process_csv(input: &str, output: &str) -> anyhow::Result<()> {
         println!("{player:?}");
         players.push(player);
     }
-    let json = serde_json::to_string_pretty(&players)?;
-    fs::write(output, json)?;
+    let content = match format {
+        OutputFormat::Json => serde_json::to_string_pretty(&players)?,
+        OutputFormat::Yaml => serde_yaml::to_string(&players)?,
+    };
+    fs::write(output, content)?;
     Ok(())
 }
 
