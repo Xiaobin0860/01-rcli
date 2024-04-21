@@ -1,10 +1,10 @@
 use clap::Parser;
 
-mod csv_opts;
-pub use csv_opts::*;
+mod csv;
+pub use csv::*;
 
-mod pass_opts;
-pub use pass_opts::*;
+mod pass;
+pub use pass::*;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

@@ -1,5 +1,5 @@
-mod opts;
-pub use opts::*;
+mod cli;
+pub use cli::*;
 
 mod process;
 pub use process::*;
