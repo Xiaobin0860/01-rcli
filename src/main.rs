@@ -1,8 +1,9 @@
-use rcli::{convert_csv, gen_pass, Opts, SubCommand};
+use rcli::{
+    convert_csv, gen_pass, process_decode, process_encode, B64SubCommand, Opts, SubCommand,
+};
 
 fn main() -> anyhow::Result<()> {
     let opts = Opts::parse_args();
-    println!("{:?}", opts);
 
     match opts.cmd {
         SubCommand::Csv(opts) => {
@@ -20,6 +21,10 @@ fn main() -> anyhow::Result<()> {
             opts.no_number,
             opts.no_symbol,
         )?,
+        SubCommand::B64(opts) => match opts.cmd {
+            B64SubCommand::Encode(opts) => process_encode(&opts.input, opts.format)?,
+            B64SubCommand::Decode(opts) => process_decode(&opts.input, opts.format)?,
+        },
     }
 
     Ok(())

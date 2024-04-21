@@ -1,6 +1,8 @@
-use std::{fmt::Display, path::Path};
+use std::fmt::Display;
 
 use clap::Parser;
+
+use super::verify_input_file;
 
 #[derive(Parser, Debug)]
 pub struct CsvOpts {
@@ -40,13 +42,5 @@ fn parse_format(value: &str) -> Result<OutputFormat, &'static str> {
         "json" => Ok(OutputFormat::Json),
         "yaml" => Ok(OutputFormat::Yaml),
         _ => Err("invalid format"),
-    }
-}
-
-fn verify_input_file(input: &str) -> Result<String, &'static str> {
-    if Path::new(input).exists() {
-        Ok(input.to_string())
-    } else {
-        Err("file not found")
     }
 }
