@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::B64Format;
 
-pub fn process_encode(input: &str, format: B64Format) -> anyhow::Result<()> {
+pub fn b64_encode(input: &str, format: B64Format) -> anyhow::Result<()> {
     let input = read_input(input)?;
     let encoded = match format {
         B64Format::Std => BASE64_STANDARD.encode(input),
@@ -13,7 +13,7 @@ pub fn process_encode(input: &str, format: B64Format) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn process_decode(input: &str, format: B64Format) -> anyhow::Result<()> {
+pub fn b64_decode(input: &str, format: B64Format) -> anyhow::Result<()> {
     let input = read_input(input)?;
     // avoid accidental newlines
     let input = input.trim();
@@ -45,13 +45,13 @@ mod tests {
 
     #[test]
     fn test_b64_encode() {
-        assert!(process_encode("Cargo.toml", B64Format::Std).is_ok());
-        assert!(process_encode("Cargo.toml", B64Format::Url).is_ok());
+        assert!(b64_encode("Cargo.toml", B64Format::Std).is_ok());
+        assert!(b64_encode("Cargo.toml", B64Format::Url).is_ok());
     }
 
     #[test]
     fn test_b64_decode() {
-        assert!(process_decode("fixtures/std.txt", B64Format::Std).is_ok());
-        assert!(process_decode("fixtures/url.txt", B64Format::Url).is_ok());
+        assert!(b64_decode("fixtures/std.txt", B64Format::Std).is_ok());
+        assert!(b64_decode("fixtures/url.txt", B64Format::Url).is_ok());
     }
 }

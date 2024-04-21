@@ -1,5 +1,6 @@
 use rcli::{
-    convert_csv, gen_pass, process_decode, process_encode, B64SubCommand, Opts, SubCommand,
+    b64_decode, b64_encode, convert_csv, gen_pass, key_gen, text_sign, text_verify, B64SubCommand,
+    Opts, SubCommand, TextSubCommand,
 };
 
 fn main() -> anyhow::Result<()> {
@@ -22,8 +23,13 @@ fn main() -> anyhow::Result<()> {
             opts.no_symbol,
         )?,
         SubCommand::B64(opts) => match opts.cmd {
-            B64SubCommand::Encode(opts) => process_encode(&opts.input, opts.format)?,
-            B64SubCommand::Decode(opts) => process_decode(&opts.input, opts.format)?,
+            B64SubCommand::Encode(opts) => b64_encode(&opts.input, opts.format)?,
+            B64SubCommand::Decode(opts) => b64_decode(&opts.input, opts.format)?,
+        },
+        SubCommand::Text(opts) => match opts.cmd {
+            TextSubCommand::Sign(opts) => text_sign(&opts.input, &opts.key)?,
+            TextSubCommand::Verify(opts) => text_verify(&opts.input, &opts.key, &opts.sig)?,
+            TextSubCommand::Generate(opts) => key_gen(opts.format, &opts.output_path)?,
         },
     }
 

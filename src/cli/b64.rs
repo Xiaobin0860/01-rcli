@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use super::verify_input_file;
+use super::verify_file;
 
 #[derive(Debug, Parser)]
 pub struct B64Opts {
@@ -19,7 +19,7 @@ pub enum B64SubCommand {
 
 #[derive(Debug, Parser)]
 pub struct B64EncodeOpts {
-    #[arg(short, long, value_parser = verify_input_file, default_value = "-")]
+    #[arg(short, long, value_parser = verify_file, default_value = "-")]
     pub input: String,
 
     #[arg(short, long, value_parser = parse_b64format, default_value = "std")]
@@ -28,7 +28,7 @@ pub struct B64EncodeOpts {
 
 #[derive(Debug, Parser)]
 pub struct B64DecodeOpts {
-    #[arg(short, long, value_parser = verify_input_file, default_value = "-")]
+    #[arg(short, long, value_parser = verify_file, default_value = "-")]
     pub input: String,
 
     #[arg(short, long, value_parser = parse_b64format, default_value = "std")]
