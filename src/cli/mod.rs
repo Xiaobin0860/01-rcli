@@ -56,10 +56,11 @@ fn verify_file(input: &str) -> Result<String, &'static str> {
 }
 
 fn verify_path(input: &str) -> Result<String, &'static str> {
-    if Path::new(input).exists() {
+    let p: &Path = Path::new(input);
+    if p.exists() && p.is_dir() {
         Ok(input.to_string())
     } else {
-        Err("path not found")
+        Err("path not found or not a directory")
     }
 }
 

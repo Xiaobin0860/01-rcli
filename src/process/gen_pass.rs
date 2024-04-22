@@ -12,7 +12,7 @@ pub fn gen_pass(
     no_upper: bool,
     no_number: bool,
     no_symbol: bool,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<String> {
     let mut pass = Vec::new();
     let mut rng = rand::thread_rng();
     let mut chars = Vec::new();
@@ -37,10 +37,9 @@ pub fn gen_pass(
     }
     pass.shuffle(&mut rng);
     let pass = String::from_utf8(pass)?;
-    println!("{pass}");
     let estimate = zxcvbn(&pass, &[])?;
     eprintln!("pass strength: {}", estimate.score());
-    Ok(())
+    Ok(pass)
 }
 
 fn choose(chars: &[u8], rng: &mut ThreadRng) -> u8 {
