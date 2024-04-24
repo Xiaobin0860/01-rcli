@@ -5,13 +5,9 @@ use axum::{
     routing::get,
     Router,
 };
-use std::{
-    net::SocketAddr,
-    ops::Deref,
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use std::{net::SocketAddr, ops::Deref, path::PathBuf, sync::Arc};
 use tokio::{fs, net::TcpListener};
+use tower_http::services::ServeDir;
 use tracing::info;
 
 struct ServeHttpState {
@@ -34,11 +30,13 @@ impl Deref for ServeHttp {
     }
 }
 
-pub async fn process_http_serve(path: &Path, port: u16) -> Result<()> {
+pub async fn process_http_serve(path: &PathBuf, port: u16) -> Result<()> {
     info!("Serve: path: {path:?}, port: {port}");
-    let state = ServeHttp::new(path.to_path_buf());
+    let state = ServeHttp::new(path.clone());
+    let serve_dir = ServeDir::new(path);
     let router = Router::new()
         .route("/", get(index_handler))
+        .nest_service("/tower", serve_dir)
         .route("/*file", get(file_handler))
         .with_state(state);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));

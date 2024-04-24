@@ -6,3 +6,6 @@ GET http://localhost:8080/Cargo.toml
 
 ### test file2
 GET http://localhost:8080/fixtures/std.txt
+
+### test tower
+GET http://localhost:8080/tower/Cargo.toml
