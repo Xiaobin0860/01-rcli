@@ -1,9 +1,12 @@
 use rcli::{
-    b64_decode, b64_encode, convert_csv, gen_pass, get_reader, key_gen, text_sign, text_verify,
-    B64SubCommand, Opts, SubCommand, TextSubCommand,
+    b64_decode, b64_encode, convert_csv, gen_pass, get_reader, key_gen, process_http_serve,
+    text_sign, text_verify, B64SubCommand, HttpSubCommand, Opts, SubCommand, TextSubCommand,
 };
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt::init();
+
     let opts = Opts::parse_args();
 
     match opts.cmd {
@@ -41,6 +44,9 @@ fn main() -> anyhow::Result<()> {
                 println!("{valid}");
             }
             TextSubCommand::Generate(opts) => key_gen(opts.format, &opts.output_path)?,
+        },
+        SubCommand::Http(opts) => match opts.cmd {
+            HttpSubCommand::Serve(opts) => process_http_serve(&opts.dir, opts.port).await?,
         },
     }
 

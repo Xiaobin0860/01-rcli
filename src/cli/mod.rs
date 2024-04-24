@@ -1,17 +1,17 @@
-use std::path::Path;
+mod b64;
+mod csv;
+mod http;
+mod pass;
+mod text;
+
+use std::path::{Path, PathBuf};
 
 use clap::Parser;
 
-mod csv;
-pub use csv::*;
-
-mod pass;
-pub use pass::*;
-
-mod b64;
 pub use b64::*;
-
-mod text;
+pub use csv::*;
+pub use http::*;
+pub use pass::*;
 pub use text::*;
 
 #[derive(Parser, Debug)]
@@ -40,6 +40,9 @@ pub enum SubCommand {
 
     #[command(about = "Sign or verify text.")]
     Text(TextOpts),
+
+    #[command(about = "Send HTTP requests.")]
+    Http(HttpOpts),
 }
 
 fn verify_file(input: &str) -> Result<String, &'static str> {
@@ -55,10 +58,10 @@ fn verify_file(input: &str) -> Result<String, &'static str> {
     }
 }
 
-fn verify_path(input: &str) -> Result<String, &'static str> {
+fn verify_path(input: &str) -> Result<PathBuf, &'static str> {
     let p: &Path = Path::new(input);
     if p.exists() && p.is_dir() {
-        Ok(input.to_string())
+        Ok(input.into())
     } else {
         Err("path not found or not a directory")
     }
