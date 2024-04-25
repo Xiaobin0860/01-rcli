@@ -86,3 +86,24 @@ async fn file_handler(
         (StatusCode::NOT_FOUND, Html("Not Found".to_string()))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use futures_util::StreamExt;
+
+    #[tokio::test]
+    async fn test_file_handler() {
+        let state = ServeHttp::new(PathBuf::from("."));
+        let response = file_handler(State(state), AxumPath("Cargo.toml".to_string()))
+            .await
+            .into_response();
+        assert_eq!(response.status(), StatusCode::OK);
+        let mut body_stream = response.into_body().into_data_stream();
+        let mut content = String::new();
+        while let Some(Ok(chunk)) = body_stream.next().await {
+            content.push_str(&String::from_utf8(chunk.to_vec()).unwrap());
+        }
+        assert!(content.starts_with("[package]"));
+    }
+}
