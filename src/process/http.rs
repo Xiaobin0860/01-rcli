@@ -2,6 +2,7 @@ use anyhow::Result;
 use axum::{
     extract::{Path as AxumPath, State},
     http::StatusCode,
+    response::{Html, IntoResponse},
     routing::get,
     Router,
 };
@@ -33,7 +34,7 @@ impl Deref for ServeHttp {
 pub async fn process_http_serve(path: &PathBuf, port: u16) -> Result<()> {
     info!("Serve: path: {path:?}, port: {port}");
     let state = ServeHttp::new(path.clone());
-    let serve_dir = ServeDir::new(path);
+    let serve_dir = ServeDir::new(path).append_index_html_on_directories(true);
     let router = Router::new()
         .route("/", get(index_handler))
         .nest_service("/tower", serve_dir)
@@ -52,16 +53,36 @@ async fn index_handler() -> &'static str {
 async fn file_handler(
     State(state): State<ServeHttp>,
     AxumPath(file): AxumPath<String>,
-) -> (StatusCode, String) {
+) -> impl IntoResponse {
     let f = state.path.join(file);
     let f = f.as_path();
     if f.exists() {
-        // TODO: dir list
-        match fs::read_to_string(f).await {
-            Ok(content) => (StatusCode::OK, content),
-            Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+        if f.is_dir() {
+            // if it is a directory, list all files/subdirectories
+            // as <li><a href="/path/to/file">file name</a></li>
+            // <html><body><ul>...</ul></body></html>
+            match fs::read_dir(f).await {
+                Ok(mut entries) => {
+                    let mut content = "<ul>".to_string();
+                    while let Ok(Some(entry)) = entries.next_entry().await {
+                        let path = entry.path();
+                        let name = entry.file_name();
+                        let name = name.to_str().unwrap();
+                        let href = format!("/{}", path.to_str().unwrap());
+                        content.push_str(&format!("<li><a href=\"{href}\">{name}</a></li>"));
+                    }
+                    content.push_str("</ul>");
+                    (StatusCode::OK, Html(content))
+                }
+                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Html(e.to_string())),
+            }
+        } else {
+            match fs::read_to_string(f).await {
+                Ok(content) => (StatusCode::OK, Html(content)),
+                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Html(e.to_string())),
+            }
         }
     } else {
-        (StatusCode::NOT_FOUND, "Not Found".to_string())
+        (StatusCode::NOT_FOUND, Html("Not Found".to_string()))
     }
 }

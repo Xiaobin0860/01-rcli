@@ -9,3 +9,9 @@ GET http://localhost:8080/fixtures/std.txt
 
 ### test tower
 GET http://localhost:8080/tower/Cargo.toml
+
+### test tower index.html
+GET http://localhost:8080/tower/assets/
+
+### test dir
+GET http://localhost:8080/fixtures/
