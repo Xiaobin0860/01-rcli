@@ -1,4 +1,4 @@
-use std::{fmt::Display, str::FromStr};
+use std::{fmt::Display, path::PathBuf, str::FromStr};
 
 use clap::Parser;
 
@@ -55,7 +55,7 @@ pub struct KeyGenerateOpts {
     pub format: TextSignFormat,
 
     #[arg(short, long, value_parser = verify_path)]
-    pub output_path: String,
+    pub output_path: PathBuf,
 }
 
 #[derive(Debug, Parser, Clone, Copy)]

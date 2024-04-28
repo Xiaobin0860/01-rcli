@@ -153,20 +153,18 @@ pub fn text_verify(
     verifier.verify(reader, &sig)
 }
 
-pub fn key_gen(format: TextSignFormat, output_path: &str) -> Result<()> {
-    println!("Generate: format: {format}, output_path: {output_path}");
-    let p = Path::new(output_path);
+pub fn key_gen(format: TextSignFormat, output_path: &Path) -> Result<()> {
     match format {
         TextSignFormat::Blake3 => {
             let key = gen_pass(32, false, false, false, false)?;
-            fs::write(p.join("blake3.txt"), key)?;
+            fs::write(output_path.join("blake3.txt"), key)?;
         }
         TextSignFormat::Ed25519 => {
-            let mut csprng = OsRng;
-            let signing_key = SigningKey::generate(&mut csprng);
+            let mut os_rng = OsRng;
+            let signing_key = SigningKey::generate(&mut os_rng);
             let verifying_key = signing_key.verifying_key();
-            fs::write(p.join("ed25519.sign"), signing_key.to_bytes())?;
-            fs::write(p.join("ed25519.verify"), verifying_key.to_bytes())?;
+            fs::write(output_path.join("ed25519.sign"), signing_key.to_bytes())?;
+            fs::write(output_path.join("ed25519.verify"), verifying_key.to_bytes())?;
         }
     }
     Ok(())
