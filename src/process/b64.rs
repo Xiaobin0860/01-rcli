@@ -1,24 +1,31 @@
+use crate::B64Format;
+use anyhow::Result;
 use base64::prelude::*;
 use std::io::Read;
 
-use crate::B64Format;
+pub fn base64_encode(input: impl AsRef<[u8]>) -> String {
+    BASE64_STANDARD.encode(input)
+}
 
-pub fn b64_encode(input: &str, format: B64Format) -> anyhow::Result<()> {
-    let input = read_input(input)?;
+pub fn base64_decode(input: &str) -> Result<Vec<u8>> {
+    Ok(BASE64_STANDARD.decode(input)?)
+}
+
+pub fn b64_encode(input: impl AsRef<[u8]>, format: B64Format) -> Result<()> {
     let encoded = match format {
-        B64Format::Std => BASE64_STANDARD.encode(input),
+        B64Format::Std => base64_encode(input),
         B64Format::Url => BASE64_URL_SAFE_NO_PAD.encode(input),
     };
     println!("{encoded}");
     Ok(())
 }
 
-pub fn b64_decode(input: &str, format: B64Format) -> anyhow::Result<()> {
+pub fn b64_decode(input: &str, format: B64Format) -> Result<()> {
     let input = read_input(input)?;
     // avoid accidental newlines
     let input = input.trim();
     let decoded = match format {
-        B64Format::Std => BASE64_STANDARD.decode(input)?,
+        B64Format::Std => base64_decode(input)?,
         B64Format::Url => BASE64_URL_SAFE_NO_PAD.decode(input)?,
     };
     // TODO: maybe not string
@@ -27,7 +34,7 @@ pub fn b64_decode(input: &str, format: B64Format) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn read_input(input: &str) -> Result<String, anyhow::Error> {
+fn read_input(input: &str) -> Result<String> {
     let input = if input == "-" {
         let mut buffer = String::new();
         std::io::stdin().read_to_string(&mut buffer)?;

@@ -1,6 +1,7 @@
 use rcli::{
-    b64_decode, b64_encode, convert_csv, gen_pass, get_reader, key_gen, process_http_serve,
-    text_sign, text_verify, B64SubCommand, HttpSubCommand, Opts, SubCommand, TextSubCommand,
+    b64_decode, b64_encode, base64_encode, convert_csv, data_decrypt, data_encrypt, gen_pass,
+    get_reader, key_gen, process_http_serve, text_sign, text_verify, B64SubCommand, HttpSubCommand,
+    Opts, SubCommand, TextSubCommand,
 };
 
 #[tokio::main]
@@ -44,6 +45,18 @@ async fn main() -> anyhow::Result<()> {
                 println!("{valid}");
             }
             TextSubCommand::Generate(opts) => key_gen(opts.format, &opts.output_path)?,
+            TextSubCommand::Encrypt(opts) => {
+                let mut data_reader = get_reader(&opts.input)?;
+                let encrypted = data_encrypt(&mut data_reader, &opts.key)?;
+                let b64 = base64_encode(encrypted);
+                println!("{b64}");
+            }
+            TextSubCommand::Decrypt(opts) => {
+                let mut data_reader = get_reader(&opts.input)?;
+                let decrypted = data_decrypt(&mut data_reader, &opts.key)?;
+                let decrypted = String::from_utf8(decrypted)?;
+                println!("{decrypted}");
+            }
         },
         SubCommand::Http(opts) => match opts.cmd {
             HttpSubCommand::Serve(opts) => process_http_serve(&opts.dir, opts.port).await?,

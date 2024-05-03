@@ -1,6 +1,6 @@
-use std::{fmt::Display, path::PathBuf, str::FromStr};
-
+use anyhow::Result;
 use clap::Parser;
+use std::{fmt::Display, path::PathBuf, str::FromStr};
 
 use super::{verify_file, verify_path};
 
@@ -20,6 +20,37 @@ pub enum TextSubCommand {
 
     #[command(about = "Generate a random blake3 key or ed25519 key pair")]
     Generate(KeyGenerateOpts),
+
+    #[command(about = "Chacha20 encrypt a text with a key")]
+    Encrypt(TextEncryptOpts),
+
+    #[command(about = "Chacha20 decrypt a text with a key")]
+    Decrypt(TextDecryptOpts),
+}
+
+#[derive(Debug, Parser)]
+pub struct TextEncryptOpts {
+    #[arg(short, long, value_parser = verify_file, default_value = "-")]
+    pub input: String,
+
+    #[arg(short, long, value_parser = verify_chacha_key)]
+    pub key: String,
+}
+
+#[derive(Debug, Parser)]
+pub struct TextDecryptOpts {
+    #[arg(short, long, value_parser = verify_file, default_value = "-")]
+    pub input: String,
+
+    #[arg(short, long, value_parser = verify_chacha_key)]
+    pub key: String,
+}
+
+fn verify_chacha_key(s: &str) -> Result<String, &'static str> {
+    if s.len() != 32 {
+        return Err("key length must be 32 bytes");
+    }
+    Ok(s.to_string())
 }
 
 #[derive(Debug, Parser)]
@@ -64,7 +95,7 @@ pub enum TextSignFormat {
     Ed25519,
 }
 
-fn parse_format(s: &str) -> anyhow::Result<TextSignFormat, &'static str> {
+fn parse_format(s: &str) -> Result<TextSignFormat, &'static str> {
     s.parse()
 }
 

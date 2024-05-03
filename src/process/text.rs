@@ -1,13 +1,17 @@
-use std::{fs, io::Read, path::Path};
+use std::{fs, io::Read, ops::Deref, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use chacha20poly1305::{
+    aead::{Aead, AeadCore},
+    ChaCha20Poly1305, ChaChaPoly1305, KeyInit, Nonce,
+};
 use ed25519_dalek::{
     Signature, Signer, SigningKey, Verifier, VerifyingKey, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
 };
 use rand::rngs::OsRng;
 
-use crate::{gen_pass, get_content, get_data, TextSignFormat};
+use crate::{base64_decode, gen_pass, get_content, get_data, TextSignFormat};
 
 pub trait TextSign {
     fn sign(&self, reader: &mut dyn Read) -> Result<Vec<u8>>;
@@ -170,6 +174,68 @@ pub fn key_gen(format: TextSignFormat, output_path: &Path) -> Result<()> {
     Ok(())
 }
 
+pub trait DataEncrypt {
+    fn data_encrypt(&self, data: &[u8]) -> Result<Vec<u8>>;
+}
+
+pub trait DataDecrypt {
+    fn data_decrypt(&self, data: &[u8]) -> Result<Vec<u8>>;
+}
+
+struct ChaCha(ChaCha20Poly1305);
+
+impl ChaCha {
+    pub fn try_new(key: &[u8]) -> Result<Self> {
+        Ok(Self(ChaChaPoly1305::new_from_slice(key)?))
+    }
+}
+
+impl Deref for ChaCha {
+    type Target = ChaCha20Poly1305;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DataEncrypt for ChaCha {
+    fn data_encrypt(&self, data: &[u8]) -> Result<Vec<u8>> {
+        let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng);
+        let mut buf = nonce.to_vec();
+        eprintln!("nonce_len={}", nonce.len());
+        let enc = self.encrypt(&nonce, data).unwrap();
+        eprintln!("enc_len={}", enc.len());
+        buf.extend(enc);
+        eprintln!("total_len={}", buf.len());
+        Ok(buf)
+    }
+}
+
+impl DataDecrypt for ChaCha {
+    fn data_decrypt(&self, data: &[u8]) -> Result<Vec<u8>> {
+        let nonce = Nonce::from_slice(&data[..12]);
+        Ok(self.decrypt(nonce, &data[12..]).unwrap())
+    }
+}
+
+pub fn data_encrypt(data_reader: &mut dyn Read, key: impl AsRef<[u8]>) -> Result<Vec<u8>> {
+    let mut data = Vec::new();
+    data_reader.read_to_end(&mut data)?;
+    let key = key.as_ref();
+    eprintln!("key_len={}, data_len={}", key.len(), data.len());
+    let chacha = ChaCha::try_new(key)?;
+    chacha.data_encrypt(&data)
+}
+
+pub fn data_decrypt(data_reader: &mut dyn Read, key: impl AsRef<[u8]>) -> Result<Vec<u8>> {
+    let mut b64_string = String::new();
+    data_reader.read_to_string(&mut b64_string)?;
+    let encrypted = base64_decode(&b64_string)?;
+    eprintln!("encrypted_total_len={}", encrypted.len());
+    let chacha = ChaCha::try_new(key.as_ref())?;
+    chacha.data_decrypt(&encrypted)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -208,5 +274,16 @@ mod tests {
         )
         .unwrap();
         assert!(valid);
+    }
+
+    #[test]
+    fn test_chacha() {
+        let key = gen_pass(32, false, false, false, true).unwrap();
+        let data = b"hello";
+        let chacha = ChaCha::try_new(key.as_bytes()).unwrap();
+        let encrypted = chacha.data_encrypt(data).unwrap();
+        let decrypted = chacha.data_decrypt(&encrypted).unwrap();
+        println!("data={data:?}, decrypted={decrypted:?}");
+        assert_eq!(data, decrypted.as_slice());
     }
 }
