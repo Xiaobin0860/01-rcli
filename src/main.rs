@@ -1,7 +1,7 @@
 use rcli::{
     b64_decode, b64_encode, base64_encode, convert_csv, data_decrypt, data_encrypt, gen_pass,
-    get_reader, key_gen, process_http_serve, text_sign, text_verify, B64SubCommand, HttpSubCommand,
-    Opts, SubCommand, TextSubCommand,
+    get_reader, jwt_encode, jwt_verify, key_gen, process_http_serve, text_sign, text_verify,
+    B64SubCommand, HttpSubCommand, JwtClaims, Opts, SubCommand, TextSubCommand,
 };
 
 #[tokio::main]
@@ -60,6 +60,20 @@ async fn main() -> anyhow::Result<()> {
         },
         SubCommand::Http(opts) => match opts.cmd {
             HttpSubCommand::Serve(opts) => process_http_serve(&opts.dir, opts.port).await?,
+        },
+        SubCommand::Jwt(opts) => match opts.cmd {
+            rcli::JwtSubCommand::Encode(opts) => {
+                let claims = JwtClaims::new(
+                    opts.aud.clone(),
+                    opts.sub.clone(),
+                    opts.exp.unix_timestamp(),
+                );
+                let jwt = jwt_encode(&claims, opts.alg)?;
+                println!("{jwt}");
+            }
+            rcli::JwtSubCommand::Verify(opts) => {
+                println!("{}", jwt_verify(&opts.token, &opts.aud, &opts.sub)?);
+            }
         },
     }
 

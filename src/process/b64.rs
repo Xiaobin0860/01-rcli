@@ -3,18 +3,30 @@ use anyhow::Result;
 use base64::prelude::*;
 use std::io::Read;
 
+#[inline(always)]
 pub fn base64_encode(input: impl AsRef<[u8]>) -> String {
     BASE64_STANDARD.encode(input)
 }
 
+#[inline(always)]
 pub fn base64_decode(input: &str) -> Result<Vec<u8>> {
     Ok(BASE64_STANDARD.decode(input)?)
+}
+
+#[inline(always)]
+pub fn base64_url_encode(input: impl AsRef<[u8]>) -> String {
+    BASE64_URL_SAFE_NO_PAD.encode(input)
+}
+
+#[inline(always)]
+pub fn base64_url_decode(input: &str) -> Result<Vec<u8>> {
+    Ok(BASE64_URL_SAFE_NO_PAD.decode(input)?)
 }
 
 pub fn b64_encode(input: impl AsRef<[u8]>, format: B64Format) -> Result<()> {
     let encoded = match format {
         B64Format::Std => base64_encode(input),
-        B64Format::Url => BASE64_URL_SAFE_NO_PAD.encode(input),
+        B64Format::Url => base64_url_encode(input),
     };
     println!("{encoded}");
     Ok(())
@@ -26,7 +38,7 @@ pub fn b64_decode(input: &str, format: B64Format) -> Result<()> {
     let input = input.trim();
     let decoded = match format {
         B64Format::Std => base64_decode(input)?,
-        B64Format::Url => BASE64_URL_SAFE_NO_PAD.decode(input)?,
+        B64Format::Url => base64_url_decode(input)?,
     };
     // TODO: maybe not string
     let decoded = String::from_utf8(decoded)?;

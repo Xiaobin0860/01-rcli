@@ -1,16 +1,17 @@
+use clap::Parser;
+use std::path::{Path, PathBuf};
+
 mod b64;
 mod csv;
 mod http;
+mod jwt;
 mod pass;
 mod text;
-
-use std::path::{Path, PathBuf};
-
-use clap::Parser;
 
 pub use b64::*;
 pub use csv::*;
 pub use http::*;
+pub use jwt::*;
 pub use pass::*;
 pub use text::*;
 
@@ -43,6 +44,9 @@ pub enum SubCommand {
 
     #[command(about = "Send HTTP requests.")]
     Http(HttpOpts),
+
+    #[command(about = "Sign or verify JWT.")]
+    Jwt(JwtOpts),
 }
 
 fn verify_file(input: &str) -> Result<String, &'static str> {
