@@ -1,4 +1,5 @@
 use clap::Parser;
+use enum_dispatch::enum_dispatch;
 use std::path::{Path, PathBuf};
 
 mod b64;
@@ -29,6 +30,7 @@ impl Opts {
 }
 
 #[derive(Parser, Debug)]
+#[enum_dispatch(CmdExecutor)]
 pub enum SubCommand {
     #[command(about = "Show CSV, or convert CSV to other formats.")]
     Csv(CsvOpts),
@@ -36,17 +38,17 @@ pub enum SubCommand {
     #[command(about = "Generate password.")]
     Pass(PassOpts),
 
-    #[command(about = "Encode or decode data to/from base64.")]
-    B64(B64Opts),
+    #[command(subcommand, about = "Encode or decode data to/from base64.")]
+    B64(B64SubCommand),
 
-    #[command(about = "Sign or verify text.")]
-    Text(TextOpts),
+    #[command(subcommand, about = "Sign or verify text.")]
+    Text(TextSubCommand),
 
-    #[command(about = "Send HTTP requests.")]
-    Http(HttpOpts),
+    #[command(subcommand, about = "Send HTTP requests.")]
+    Http(HttpSubCommand),
 
-    #[command(about = "Sign or verify JWT.")]
-    Jwt(JwtOpts),
+    #[command(subcommand, about = "Sign or verify JWT.")]
+    Jwt(JwtSubCommand),
 }
 
 fn verify_file(input: &str) -> Result<String, &'static str> {

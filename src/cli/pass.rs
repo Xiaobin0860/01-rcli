@@ -1,3 +1,4 @@
+use crate::{gen_pass, CmdExecutor};
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -16,4 +17,18 @@ pub struct PassOpts {
 
     #[arg(long, default_value_t = false)]
     pub no_symbol: bool,
+}
+
+impl CmdExecutor for PassOpts {
+    async fn execute(&self) -> anyhow::Result<()> {
+        let pass = gen_pass(
+            self.length,
+            self.no_lower,
+            self.no_upper,
+            self.no_number,
+            self.no_symbol,
+        )?;
+        println!("{pass}");
+        Ok(())
+    }
 }

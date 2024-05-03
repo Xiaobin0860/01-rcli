@@ -1,14 +1,11 @@
-use clap::Parser;
-
 use super::verify_file;
+use crate::{b64_decode, b64_encode, CmdExecutor};
+use anyhow::Result;
+use clap::Parser;
+use enum_dispatch::enum_dispatch;
 
 #[derive(Debug, Parser)]
-pub struct B64Opts {
-    #[command(subcommand)]
-    pub cmd: B64SubCommand,
-}
-
-#[derive(Debug, Parser)]
+#[enum_dispatch(CmdExecutor)]
 pub enum B64SubCommand {
     #[command(about = "Encode data to base64.")]
     Encode(B64EncodeOpts),
@@ -41,10 +38,22 @@ pub enum B64Format {
     Url,
 }
 
-fn parse_b64format(s: &str) -> anyhow::Result<B64Format, &'static str> {
+fn parse_b64format(s: &str) -> Result<B64Format, &'static str> {
     match s {
         "std" => Ok(B64Format::Std),
         "url" => Ok(B64Format::Url),
         _ => Err("invalid base64 format"),
+    }
+}
+
+impl CmdExecutor for B64EncodeOpts {
+    async fn execute(&self) -> Result<()> {
+        b64_encode(&self.input, self.format)
+    }
+}
+
+impl CmdExecutor for B64DecodeOpts {
+    async fn execute(&self) -> Result<()> {
+        b64_decode(&self.input, self.format)
     }
 }

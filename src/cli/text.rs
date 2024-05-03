@@ -1,16 +1,15 @@
+use super::{verify_file, verify_path};
+use crate::{
+    base64_encode, data_decrypt, data_encrypt, get_reader, key_gen, text_sign, text_verify,
+    CmdExecutor,
+};
 use anyhow::Result;
 use clap::Parser;
+use enum_dispatch::enum_dispatch;
 use std::{fmt::Display, path::PathBuf, str::FromStr};
 
-use super::{verify_file, verify_path};
-
 #[derive(Debug, Parser)]
-pub struct TextOpts {
-    #[command(subcommand)]
-    pub cmd: TextSubCommand,
-}
-
-#[derive(Debug, Parser)]
+#[enum_dispatch(CmdExecutor)]
 pub enum TextSubCommand {
     #[command(about = "Sign a text with a private/session key and return a signature")]
     Sign(TextSignOpts),
@@ -117,5 +116,49 @@ impl Display for TextSignFormat {
             TextSignFormat::Blake3 => write!(f, "blake3"),
             TextSignFormat::Ed25519 => write!(f, "ed25519"),
         }
+    }
+}
+
+impl CmdExecutor for TextSignOpts {
+    async fn execute(&self) -> Result<()> {
+        let mut reader = get_reader(&self.input)?;
+        let encoded = text_sign(self.format, &mut reader, &self.key)?;
+        println!("{encoded}");
+        Ok(())
+    }
+}
+
+impl CmdExecutor for TextVerifyOpts {
+    async fn execute(&self) -> Result<()> {
+        let mut reader = get_reader(&self.input)?;
+        let valid = text_verify(self.format, &mut reader, &self.key, &self.sig)?;
+        println!("{valid}");
+        Ok(())
+    }
+}
+
+impl CmdExecutor for KeyGenerateOpts {
+    async fn execute(&self) -> Result<()> {
+        key_gen(self.format, &self.output_path)
+    }
+}
+
+impl CmdExecutor for TextEncryptOpts {
+    async fn execute(&self) -> Result<()> {
+        let mut data_reader = get_reader(&self.input)?;
+        let encrypted = data_encrypt(&mut data_reader, &self.key)?;
+        let b64 = base64_encode(encrypted);
+        println!("{b64}");
+        Ok(())
+    }
+}
+
+impl CmdExecutor for TextDecryptOpts {
+    async fn execute(&self) -> Result<()> {
+        let mut data_reader = get_reader(&self.input)?;
+        let decrypted = data_decrypt(&mut data_reader, &self.key)?;
+        let decrypted = String::from_utf8(decrypted)?;
+        println!("{decrypted}");
+        Ok(())
     }
 }

@@ -1,14 +1,11 @@
+use crate::{jwt_encode, jwt_verify, CmdExecutor, JwtClaims};
 use clap::Parser;
+use enum_dispatch::enum_dispatch;
 use std::str::FromStr;
 use time::{Duration, OffsetDateTime};
 
 #[derive(Debug, Parser)]
-pub struct JwtOpts {
-    #[command(subcommand)]
-    pub cmd: JwtSubCommand,
-}
-
-#[derive(Debug, Parser)]
+#[enum_dispatch(CmdExecutor)]
 pub enum JwtSubCommand {
     #[command(about = "Encode a JWT token")]
     Encode(JwtEncodeOpts),
@@ -93,4 +90,24 @@ impl FromStr for JwtAlg {
 
 fn parse_jwt_alg(s: &str) -> Result<JwtAlg, &'static str> {
     s.parse()
+}
+
+impl CmdExecutor for JwtEncodeOpts {
+    async fn execute(&self) -> anyhow::Result<()> {
+        let claims = JwtClaims::new(
+            self.aud.clone(),
+            self.sub.clone(),
+            self.exp.unix_timestamp(),
+        );
+        let jwt = jwt_encode(&claims, self.alg)?;
+        println!("{jwt}");
+        Ok(())
+    }
+}
+
+impl CmdExecutor for JwtVerifyOpts {
+    async fn execute(&self) -> anyhow::Result<()> {
+        println!("{}", jwt_verify(&self.token, &self.aud, &self.sub)?);
+        Ok(())
+    }
 }

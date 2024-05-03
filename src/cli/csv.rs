@@ -1,8 +1,7 @@
-use std::fmt::Display;
-
-use clap::Parser;
-
 use super::verify_file;
+use crate::{convert_csv, CmdExecutor};
+use clap::Parser;
+use std::fmt::Display;
 
 #[derive(Parser, Debug)]
 pub struct CsvOpts {
@@ -42,5 +41,17 @@ fn parse_format(value: &str) -> Result<OutputFormat, &'static str> {
         "json" => Ok(OutputFormat::Json),
         "yaml" => Ok(OutputFormat::Yaml),
         _ => Err("invalid format"),
+    }
+}
+
+impl CmdExecutor for CsvOpts {
+    async fn execute(&self) -> anyhow::Result<()> {
+        let output = if let Some(output) = self.output.clone() {
+            output
+        } else {
+            format!("output.{}", self.format)
+        };
+        convert_csv(&self.input, &output, self.format)?;
+        Ok(())
     }
 }
